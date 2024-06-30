@@ -30,7 +30,7 @@ class ProductViewSet(AbstractViewSet):
         return Product.objects.exclude(hidden=True)
 
     def get_object(self):
-        obj = Product.objects.get_object_by_public_id(self.kwargs['pk'])
+        obj = Product.objects.get_object_by_public_id(self.kwargs['public_id'])
         self.check_object_permissions(self.request, obj)
 
         return obj
@@ -65,12 +65,12 @@ class ProductViewSet(AbstractViewSet):
 
         return Response(serializer.data)
         
-    @action(methods=['PUT'],  detail=True)
-    def hide(self, request, public_id: UUID | None, *args, **kwargs):        
+    @action(methods=['PUT'], detail=True, serializer_class=None)
+    def hide(self, request: Request, public_id: UUID):        
         if not public_id:
             return Response({"detail": "Public key is required."}, status=status.HTTP_400_BAD_REQUEST)
         
-        product: Product = Product.objects.get_object_by_public_id(public_id)
+        product: Product = Product.objects.get(public_id=public_id)
         
         if product.hidden is True:
             return Response({"detail": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -93,7 +93,7 @@ class ProductViewSet(AbstractViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(methods=['GET'], detail=False, url_path='by_user/(?P<user_public_id>[^/.]+)')
-    def get_by_user(self, request, user_public_id=None, *args, **kwargs):
+    def get_by_user(self, request, user_public_id: UUID | None, *args, **kwargs):
         try:
             user = User.objects.get(public_id=user_public_id)
         except User.DoesNotExist:

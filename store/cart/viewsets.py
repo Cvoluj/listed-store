@@ -1,17 +1,14 @@
 from uuid import UUID
-from django.forms import ValidationError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.exceptions import NotFound
 
-from store.product.models import Product
 from .models import CartItem
-from .serializers import CartSerializer, CartItemSerializer, AddCartItemSerializer
-from .service import get_cart
+from .serializers import CartSerializer, CartItemSerializer, AddCartItemSerializer, PutCartItemSerializer
+from .service import get_cart, get_product
 
 class CartViewSet(GenericViewSet, 
                   mixins.CreateModelMixin, 
@@ -47,17 +44,28 @@ class CartViewSet(GenericViewSet,
     @action(detail=True, methods=['post'])
     def remove_item(self, request: Request, public_id: UUID):
         cart = get_cart(request)
+        cart.remove_product(get_product(public_id))  
+        return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)   
+    
+    @action(detail=False, methods=['put'], serializer_class=PutCartItemSerializer)
+    def change_quantity(self, request: Request):
+        cart = get_cart(request)
+        serializer = PutCartItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
-        try:
-            product = Product.objects.get(public_id=public_id, hidden=False)
-        except Product.DoesNotExist:
-            raise NotFound(detail='Product not found')
-        except ValidationError:
-            raise NotFound(detail='Wrong public_id')
+        product = get_product(serializer.validated_data['product'])
+        cart_item: CartItem = cart.retrieve_product_from_cart(product)
         
-        cart.remove_product(product)  
-
-        return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)    
+        updated_quantity = cart_item.quantity + serializer.validated_data['quantity']
+        if updated_quantity <= 0:
+            cart.remove_product(product)
+            cart.save()
+        else:
+            cart_item.quantity = updated_quantity
+            cart_item.save()
+        
+        return Response(CartSerializer(cart).data)
+        
 
     # @action(detail=False, methods=['post'])
     # def clear(self, request: Request):
@@ -76,3 +84,4 @@ class CartViewSet(GenericViewSet,
             return AddCartItemSerializer
 
         return super().get_serializer_class()
+    

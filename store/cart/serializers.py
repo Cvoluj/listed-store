@@ -50,4 +50,11 @@ class AddCartItemSerializer(serializers.ModelSerializer):
         data['concrete_product'] = concrete_product  
         
         return data
+
+class PutCartItemSerializer(serializers.ModelSerializer):
+    product = serializers.UUIDField()
+    quantity = serializers.IntegerField(default=1)
     
+    class Meta:
+        model=CartItem
+        fields=['product', 'quantity']
