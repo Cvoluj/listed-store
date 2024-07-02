@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+const HOST = process.env.REACT_APP_HOST;
+const REACT_PORT = process.env.REACT_APP_PORT;
+
 const Product = ({ product, index }) => {
   const [quantity, setQuantity] = useState(1);
 
@@ -24,7 +27,8 @@ const Product = ({ product, index }) => {
         <td>{product.description}</td>
         <td>{product.price}</td>
         <td>{product.stock}</td>
-        <td>{product.user}</td>
+        {/* TODO replace with frontend link, not api*/}
+        <td><a href={`http://${HOST}:${REACT_PORT}/user/${product.user_public_id}/`}>{product.user}</a></td>
         <td>
         <input
           type="number"

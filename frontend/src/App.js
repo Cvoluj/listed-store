@@ -1,11 +1,14 @@
 import React from 'react';
+import { Route, Routes } from 'react-router-dom';
 import Content from './components/Base/Content';
+import UserPage from './components/User/UserPage';
 
 const App = () => {
   return (
-    <div className="App">
-      <Content />
-    </div>
+    <Routes>
+        <Route path="/" element={<Content />} />
+        <Route path="/user/:publicId" element={<UserPage />} />
+    </Routes>
   );
 };
 

@@ -1,33 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from './Navbar';
-import Hero from './Hero';
+import { useParams } from 'react-router-dom';
+
+import Navbar from '../Base/Navbar';
+import Hero from '../Base/Hero';
 import Products from '../Product';
-import Footer from './Footer';
+import Footer from '../Base/Footer';
 
 const HOST = process.env.REACT_APP_HOST;
 const BACKEND_PORT = process.env.REACT_APP_BACKEND_PORT;
 
-const Content = () => {
+const UserPage = () => {
+  const { publicId } = useParams();
   const [products, setProducts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetch(`http://${HOST}:${BACKEND_PORT}/api/product/?page=${page}`)
+      fetch(`http://${HOST}:${BACKEND_PORT}/api/product/by_user/${publicId}/`)
       .then(response => response.json())
       .then(data => {
-        setProducts(data.results);
-        setTotalPages(data.total_pages);
+        setProducts(data);
       })
       .catch(error => console.error('Error:', error));
-  }, [page]);
-
-  const handlePageChange = (newPage) => {
-    setPage(newPage);
-  };
+  }, [ publicId ]);
 
   return (
-    <div className="Content">
+    <div className="UserPage">
       <Navbar />
       <Hero />
       <Products products={products} />
@@ -36,4 +32,4 @@ const Content = () => {
   );
 };
 
-export default Content;
+export default UserPage;
