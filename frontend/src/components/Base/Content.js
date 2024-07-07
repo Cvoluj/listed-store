@@ -3,9 +3,7 @@ import Navbar from './Navbar';
 import Hero from './Hero';
 import Products from '../Product';
 import Footer from './Footer';
-
-const HOST = process.env.REACT_APP_HOST;
-const BACKEND_PORT = process.env.REACT_APP_BACKEND_PORT;
+import jwtApi from '../../api/jwtApi';
 
 const Content = () => {
   const [products, setProducts] = useState([]);
@@ -13,13 +11,16 @@ const Content = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetch(`http://${HOST}:${BACKEND_PORT}/api/product/?page=${page}`)
-      .then(response => response.json())
-      .then(data => {
-        setProducts(data.results);
-        setTotalPages(data.total_pages);
-      })
-      .catch(error => console.error('Error:', error));
+    const fetchProductData = async () => {
+    try{
+      const response = await jwtApi.get(`product/?page=${page}`)
+      setProducts(response.data.results);
+      setTotalPages(response.data.total_pages);
+    } catch (error) {
+      console.error("Error", error);
+    }
+    }
+    fetchProductData()
   }, [page]);
 
   const handlePageChange = (newPage) => {

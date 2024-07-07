@@ -101,7 +101,8 @@ class ProductViewSet(AbstractViewSet):
         
         if self.request.user.is_superuser:
             products = Product.objects.filter(user=user)
-        products = Product.objects.filter(user=user, hidden=False)        
+        else:
+            products = Product.objects.filter(user=user, hidden=False)        
         
         if not products.exists():
             return Response({"detail": "This user has not published any products yet."}, status=status.HTTP_204_NO_CONTENT)

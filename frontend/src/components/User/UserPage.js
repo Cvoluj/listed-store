@@ -2,30 +2,32 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import Navbar from '../Base/Navbar';
-import Hero from '../Base/Hero';
+import Hero from './Hero';
 import Products from '../Product';
 import Footer from '../Base/Footer';
-
-const HOST = process.env.REACT_APP_HOST;
-const BACKEND_PORT = process.env.REACT_APP_BACKEND_PORT;
+import jwtApi from '../../api/jwtApi';
 
 const UserPage = () => {
   const { publicId } = useParams();
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-      fetch(`http://${HOST}:${BACKEND_PORT}/api/product/by_user/${publicId}/`)
-      .then(response => response.json())
-      .then(data => {
-        setProducts(data);
-      })
-      .catch(error => console.error('Error:', error));
+    const fetchProductByUser = async () => {
+      try {
+        const response = await jwtApi.get(`product/by_user/${publicId}/`)
+        setProducts(response.data);
+      } catch(error) { 
+        console.error('Error:', error);
+      }
+    };
+
+    fetchProductByUser();
   }, [ publicId ]);
 
   return (
     <div className="UserPage">
       <Navbar />
-      <Hero />
+      <Hero public_id={publicId}/>
       <Products products={products} />
       <Footer />
     </div>
