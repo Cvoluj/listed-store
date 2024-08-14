@@ -8,22 +8,22 @@ from rest_framework.viewsets import GenericViewSet
 
 from .models import CartItem
 from .serializers import CartSerializer, CartItemSerializer, AddCartItemSerializer, PutCartItemSerializer
-from .service import get_cart, get_product
+from .service import get_cart, get_product, update_session_expiry
 
 class CartViewSet(GenericViewSet, 
                   mixins.CreateModelMixin, 
-                #   mixins.DestroyModelMixin
             ):
     permission_classes = [IsAuthenticated]
     lookup_field = 'public_id'
     
+    @update_session_expiry(180)
     def list(self, request: Request):
         cart = get_cart(request)
         serializer = CartSerializer(cart)
-        request.session.set_expiry(180)
 
         return Response(serializer.data)
 
+    @update_session_expiry(180)
     def create(self, request: Request, *args, **kwargs):
         serializer = AddCartItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -38,15 +38,16 @@ class CartViewSet(GenericViewSet,
             cart_item.save()
         serializer = CartItemSerializer(cart_item)
         
-        request.session.set_expiry(180)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
+    @update_session_expiry(180)
     @action(detail=True, methods=['post'])
     def remove_item(self, request: Request, public_id: UUID):
         cart = get_cart(request)
         cart.remove_product(get_product(public_id))  
         return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)   
     
+    @update_session_expiry(180)
     @action(detail=False, methods=['put'], serializer_class=PutCartItemSerializer)
     def change_quantity(self, request: Request):
         cart = get_cart(request)
@@ -66,18 +67,13 @@ class CartViewSet(GenericViewSet,
         
         return Response(CartSerializer(cart).data)
         
-
-    # @action(detail=False, methods=['post'])
-    # def clear(self, request: Request):
-    #     cart = get_cart(request)
-    #     product_id = request.data.get('product')
-    #     product = get_object_or_404(Product, pk=product_id)
-    #     cart_item = get_object_or_404(CartItem, cart=cart, product=product)
-    #     cart_item.delete()
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
+    @update_session_expiry(180)    
+    @action(detail=False, methods=['delete'])
+    def clear(self, request: Request):
+        cart = get_cart(request)
+        cart.get_all_products().delete()
+        return Response(CartSerializer(cart).data)
     
-    # def remove(self):
-    #     ...
     
     def get_serializer_class(self):
         if self.action in ["create"]:

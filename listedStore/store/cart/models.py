@@ -17,6 +17,9 @@ class Cart(AbstractModel):
     
     def remove_product(self, product):
         self.retrieve_product_from_cart(product).delete()
+
+    def get_all_products(self):
+        return self.items.all()
         
     def __str__(self):
         return f"Cart {self.id} for {self.user}"

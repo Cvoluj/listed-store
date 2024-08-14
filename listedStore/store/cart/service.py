@@ -1,4 +1,5 @@
 from uuid import UUID
+from functools import wraps
 from django.conf import settings
 from django.forms import ValidationError
 from rest_framework.request import Request
@@ -6,6 +7,16 @@ from rest_framework.exceptions import NotFound
 
 from store.product.models import Product
 from .models import Cart
+
+
+def update_session_expiry(expiry_time):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, request, *args, **kwargs):
+            request.session.set_expiry(expiry_time)
+            return func(self, request, *args, **kwargs)
+        return wrapper
+    return decorator
 
 
 def get_cart(request: Request):
