@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 
@@ -12,30 +11,13 @@ const SignIn = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkToken = () => {
-      const accessToken = localStorage.getItem('accessToken');
-      if (accessToken) {
-        try {
-          const decodedToken = jwtDecode(accessToken);
-          const currentTime = Date.now() / 10000; 
-
-          if (decodedToken.exp > currentTime) {
-            const user = authService.getCurrentUser();
-            setMessage(`Hey, ${user.username}, you are already logged in`);
-            setIsLoggedIn(true);
-          } else {
-            setIsLoggedIn(false);
-          }
-        } catch (error) {
-          console.error('Token decoding error:', error);
-          setIsLoggedIn(false);
-        }
-      } else {
-        setIsLoggedIn(false);
-      }
-    };
-
-    checkToken();
+    const { isLoggedIn, user } = authService.checkToken();
+    if (isLoggedIn) {
+      setMessage(`Hey, ${user.user.username}, you are already logged in`);
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
   }, []);
 
   const handleSubmit = async (e) => {
