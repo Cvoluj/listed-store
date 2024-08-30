@@ -9,6 +9,11 @@ from rest_framework.viewsets import GenericViewSet
 from .models import CartItem
 from .serializers import CartSerializer, CartItemSerializer, AddCartItemSerializer, PutCartItemSerializer
 from .service import get_cart, get_product, update_session_expiry
+from store.user.models import User
+from store.rmq.service import RMQReceiptProducer
+from store.rmq.message import MessageItem
+from store.smtp_mail.models import SMTPMail
+
 
 class CartViewSet(GenericViewSet, 
                   mixins.CreateModelMixin, 
@@ -81,3 +86,27 @@ class CartViewSet(GenericViewSet,
 
         return super().get_serializer_class()
     
+    @update_session_expiry(180)
+    @action(detail=False, methods=['post'])
+    def buy(self, request: Request):
+        cart = get_cart(request)
+        user: User = request.user
+        items: list[CartItem] = list(cart.get_all_products())
+
+        message_items = [
+            MessageItem(
+                name=item.product.name, 
+                quantity=item.quantity, 
+                price=item.product.price
+            ) for item in items    
+        ]
+
+        smtp_mail = SMTPMail.objects.get(name='listedStore')
+
+        rmq_producer = RMQReceiptProducer(smtp_mail=smtp_mail)
+        rmq_producer.send_receipt_message(email_reciever=user.email, message_items=message_items)
+
+
+        cart.get_all_products().delete()
+        return Response(CartSerializer(cart).data, status=status.HTTP_200_OK) 
+        

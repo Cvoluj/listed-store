@@ -24,6 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY") 
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -62,6 +64,7 @@ INSTALLED_APPS = [
     'store.user',
     'store.product',
     'store.cart',
+    'store.smtp_mail',
 ]   
 
 MIDDLEWARE = [
@@ -157,3 +160,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CART
 SESSION_CART_KEY = 'cart_id'
+
+# RABBITMQ
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_QUEUE = os.getenv("RABBITMQ_QUEUE")
