@@ -30,12 +30,21 @@ class MessageContext:
     def __post_init__(self):
         self.total = sum(item.subtotal for item in self.items).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
+@dataclass
+class SMTP:
+    name: str
+    smtp_server: str
+    smtp_port: int
+    smtp_email: str
+    smtp_password: str
+
 
 @dataclass
 class Message:
     email: str
     subject: str
     context: MessageContext
+    smtp: SMTP
 
 
     def json(self, indent=4) -> str:
